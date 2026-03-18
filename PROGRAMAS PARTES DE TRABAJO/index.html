@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Partes de Trabajo</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <section class="authScreen" id="authScreen">
+    <div class="authCard">
+      <h1>PARTES DE TRABAJO</h1>
+      <p>Accede con tu usuario para crear partes y después añadir líneas dentro de cada parte.</p>
+      <form id="loginForm" class="authForm">
+        <label>Usuario
+          <input id="loginUser" class="input" autocomplete="username" required />
+        </label>
+        <label>Contraseña
+          <input id="loginPass" type="password" class="input" autocomplete="current-password" required />
+        </label>
+        <button class="btn btn-blue" type="submit">Entrar</button>
+      </form>
+      <div id="loginMsg" class="msg hidden"></div>
+    </div>
+  </section>
+
+  <div class="wrap hidden" id="appWrap">
+    <div class="card">
+      <div class="row-between">
+        <h1 class="title" id="pageTitle">MIS PARTES DE TRABAJO</h1>
+        <div class="topActions">
+          <span class="userBadge" id="currentUserBadge">👤 Usuario: -</span>
+          <button class="btn btn-green" id="btnDownloadExcel">📥 Descargar Excel del mes</button>
+                    <button class="btn btn-ghost" id="btnHome" title="Volver al listado">🏠 Listado</button>
+          <button class="btn btn-ghost" id="btnLogout">🚪 Cerrar sesión</button>
+        </div>
+      </div>
+
+      <div class="filtersBar">
+        <label>Mes
+          <select id="fMonth"></select>
+        </label>
+        <label>Año
+          <select id="fYear"></select>
+        </label>
+        <button class="btn btn-ghost" id="btnRefresh">↻ Actualizar</button>
+      </div>
+
+      <div class="smallNote" id="saveInfoNote">
+        ✔️ Primero creas el parte. Después, dentro del parte, añades sus líneas.<br>
+        ✔️ El Excel se descarga solo con las líneas del mes y año seleccionados del usuario activo.<br>
+        ✔️ Esta versión guarda y lee directamente en Supabase usando la clave publicable.
+      </div>
+
+      <div id="appMsg" class="msg hidden" style="margin-top:10px"></div>
+
+      <section id="viewList" style="margin-top:14px;">
+        <div class="row-between">
+          <button class="btn btn-blue" id="btnNewParte">➕ NUEVO PARTE</button>
+          <div class="search">
+            <input class="input" id="txtSearch" placeholder="Buscar" />
+            <button class="btn btn-blue" id="btnSearch">🔎</button>
+          </div>
+        </div>
+
+        <div class="meta" id="listMeta">Mostrando: 0/0</div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width:280px;">Código</th>
+              <th>Autor</th>
+              <th style="width:140px;">Fecha</th>
+              <th style="width:160px;">Estado</th>
+              <th style="width:80px; text-align:center;">🗑️</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyPartes"></tbody>
+        </table>
+
+        <div class="empty hidden" id="emptyList">ℹ️ No se ha encontrado ningún registro</div>
+      </section>
+
+      <section id="viewDetail" class="hidden" style="margin-top:14px;">
+        <div class="subheader">
+          <div class="left">
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <div style="font-weight:900; font-size:18px;" id="detailHeader"></div>
+              <button class="badge badge-btn" id="detailEstado" title="Cambiar estado">En elaboración</button>
+            </div>
+            <p class="muted">Autor: <span id="detailAutor"></span></p>
+            <p class="muted">Obra del parte (opcional): <span id="detailObraParte">-</span></p>
+            <p class="muted">Comentario: <span id="detailComentario">-</span></p>
+          </div>
+
+          <div class="row" style="align-items:flex-start; justify-content:flex-end;">
+            <button class="btn btn-green" id="btnNuevaLinea">➕ NUEVA LÍNEA</button>
+            <button class="btn btn-ghost" id="btnEditarParte">✏️ Editar parte</button>
+          </div>
+        </div>
+
+        <div class="row-between" style="margin:10px 0 8px;">
+          <div class="meta" id="lineasMeta">Mostrando: 0/0</div>
+          <div class="search">
+            <input class="input" id="txtSearchLineas" placeholder="Buscar líneas" />
+            <button class="btn btn-blue" id="btnSearchLineas">🔎</button>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Obra (Centro de coste)</th>
+              <th style="width:160px;">Tipo de hora</th>
+              <th style="width:120px;">Unidades</th>
+              <th style="width:140px;">Fecha</th>
+              <th style="width:90px; text-align:center;">Editar</th>
+              <th style="width:70px; text-align:center;">🗑️</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyLineas"></tbody>
+        </table>
+
+        <div class="empty hidden" id="emptyLineas">ℹ️ No se ha encontrado ningún registro</div>
+      </section>
+    </div>
+  </div>
+
+  <div class="backdrop" id="modalParte">
+    <div class="modal">
+      <div class="modalHeader">
+        <div id="modalParteTitle">NUEVO PARTE DE TRABAJO</div>
+        <button class="btn btn-small transparentBtn" id="btnCloseParte">✖</button>
+      </div>
+      <div class="modalBody">
+        <div class="grid">
+          <div class="field">
+            <label>Fecha</label>
+            <input class="input" type="date" id="parteFecha" />
+          </div>
+          <div class="field">
+            <label>Tipo de Cierre</label>
+            <input class="input" value="Mensual" disabled />
+          </div>
+          <div class="field" style="grid-column:1 / -1;">
+            <label>Obra (opcional)</label>
+            <div class="comboWrap">
+              <input class="input comboInput" id="parteObra" placeholder="Escribe para buscar una obra" autocomplete="off" />
+              <div class="comboMenu hidden" id="parteObraMenu"></div>
+            </div>
+            <div class="hint">Pulsa para ver todas las obras o escribe para filtrar.</div>
+          </div>
+          <div class="field" style="grid-column:1 / -1;">
+            <label>Resumen</label>
+            <input class="input" id="parteResumen" placeholder="Se autogenera, pero puedes corregirlo" />
+          </div>
+          <div class="field" style="grid-column:1 / -1;">
+            <label>Comentario</label>
+            <textarea id="parteComentario" class="input" placeholder="Observaciones..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modalFooter">
+        <button class="btn btn-green" id="btnGuardarParte">💾 GUARDAR</button>
+        <button class="btn btn-blue" id="btnCancelarParte">✖ CANCELAR</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="backdrop" id="modalLinea">
+    <div class="modal">
+      <div class="modalHeader">
+        <div id="modalLineaTitle">NUEVA LÍNEA</div>
+        <button class="btn btn-small transparentBtn" id="btnCloseLinea">✖</button>
+      </div>
+      <div class="modalBody">
+        <div class="grid-3">
+          <div class="field">
+            <label>Fecha</label>
+            <input class="input" type="date" id="lineaFecha" />
+          </div>
+          <div class="field">
+            <label>Unidades / Horas</label>
+            <input class="input" type="number" step="0.01" id="lineaUnidades" value="" readonly />
+          </div>
+          <div class="field">
+            <label>Tipo de Hora</label>
+            <select id="lineaTipoHora">
+              <option value="ORDINARIA">ORDINARIA</option>
+              <option>EXTRAORDINARIA</option>
+              <option>FESTIVA</option>
+              <option>NOCTURNA</option>
+              <option>OTROS</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Hora Inicio</label>
+            <input class="input" type="time" id="lineaHoraInicio" />
+          </div>
+          <div class="field">
+            <label>Hora Fin</label>
+            <input class="input" type="time" id="lineaHoraFin" />
+          </div>
+          <div class="field" style="grid-column:1 / -1;">
+            <label>Obra (obligatoria)</label>
+            <div class="comboWrap">
+              <input class="input comboInput" id="lineaObra" placeholder="Escribe para buscar una obra" autocomplete="off" />
+              <div class="comboMenu hidden" id="lineaObraMenu"></div>
+            </div>
+          </div>
+          <div class="field" style="grid-column:1 / -1;">
+            <label>Texto</label>
+            <textarea id="lineaTexto" class="input" placeholder="Describe el trabajo..."></textarea>
+          </div>
+          <div class="field" style="grid-column:1 / -1;">
+            <label>Asociar documento (opcional)</label>
+            <input class="input" type="file" id="lineaAdjunto" />
+            <div class="hint">Se guardará solo el nombre del archivo en la base de datos.</div>
+          </div>
+        </div>
+      </div>
+      <div class="modalFooter">
+        <button class="btn btn-green" id="btnGrabarLinea">💾 GRABAR</button>
+        <button class="btn btn-blue" id="btnCancelarLinea">✖ CANCELAR</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
